@@ -1,0 +1,138 @@
+diff --git a/core/modules/package_manager/config/install/package_manager.settings.yml b/core/modules/package_manager/config/install/package_manager.settings.yml
+index edd2c6ed40a..6645262819d 100644
+--- a/core/modules/package_manager/config/install/package_manager.settings.yml
++++ b/core/modules/package_manager/config/install/package_manager.settings.yml
+@@ -2,4 +2,4 @@ executables:
+   composer: ~
+   rsync: ~
+ additional_trusted_composer_plugins: []
+-include_unknown_files_in_project_root: false
++include_unknown_files_in_project_root: []
+diff --git a/core/modules/package_manager/config/schema/package_manager.schema.yml b/core/modules/package_manager/config/schema/package_manager.schema.yml
+index e048fd67a73..cce292a93d7 100644
+--- a/core/modules/package_manager/config/schema/package_manager.schema.yml
++++ b/core/modules/package_manager/config/schema/package_manager.schema.yml
+@@ -23,8 +23,8 @@ package_manager.settings:
+         type: package_name
+         label: 'Trusted composer plugin'
+     include_unknown_files_in_project_root:
+-      type: boolean
+-      label: 'Include unrecognized files and directories in the project root in staging operations'
++      type: sequence
++      label: 'Path patterns to include in the project root in staging operations'
+     log:
+       type: string
+       label: 'Path of a file to which Composer Stager process output should be logged'
+diff --git a/core/modules/package_manager/package_manager.install b/core/modules/package_manager/package_manager.install
+new file mode 100644
+index 00000000000..9eb425e188b
+--- /dev/null
++++ b/core/modules/package_manager/package_manager.install
+@@ -0,0 +1,13 @@
++<?php
++
++/**
++ * Change the include_unknown_files_in_project_root setting to a sequence.
++ */
++function package_manager_update_11201(): void {
++  $config = \Drupal::configFactory()->getEditable('package_manager.settings');
++  $setting = $config->get('include_unknown_files_in_project_root');
++  if (!is_array($setting)) {
++    $config->set('include_unknown_files_in_project_root', $setting ? ['*'] : []);
++    $config->save();
++  }
++}
+diff --git a/core/modules/package_manager/src/PathExcluder/UnknownPathExcluder.php b/core/modules/package_manager/src/PathExcluder/UnknownPathExcluder.php
+index f6babf1814e..dd8dafe7757 100644
+--- a/core/modules/package_manager/src/PathExcluder/UnknownPathExcluder.php
++++ b/core/modules/package_manager/src/PathExcluder/UnknownPathExcluder.php
+@@ -31,11 +31,12 @@
+  * If the web root and the project root are the same, nothing is excluded.
+  *
+  * This excluder can be disabled by changing the config setting
+- * `package_manager.settings:include_unknown_files_in_project_root` to TRUE.
+- * This may be needed for sites that have files outside the web root (besides
+- * the vendor directory) which are nonetheless needed in order for Composer to
+- * assemble the code base correctly; a classic example would be a directory of
+- * patch files used by `cweagans/composer-patches`.
++ * `package_manager.settings:include_unknown_files_in_project_root` to ["*"].
++ * A more specific pattern can be used to include only certain files. This may
++ * be needed for sites that have files outside the web root (besides the vendor
++ * directory) which are nonetheless needed in order for Composer to assemble
++ * the code base correctly; a classic example would be a directory of patch
++ * files used by `cweagans/composer-patches`.
+  *
+  * @internal
+  *   This is an internal part of Package Manager and may be changed or removed
+@@ -76,10 +77,10 @@ public static function getSubscribedEvents(): array {
+   private function getExcludedPaths(): array {
+     // If this excluder is disabled, or the project root and web root are the
+     // same, we are not excluding any paths.
+-    $is_disabled = $this->configFactory->get('package_manager.settings')
++    $path_patterns = $this->configFactory->get('package_manager.settings')
+       ->get('include_unknown_files_in_project_root');
+     $web_root = $this->pathLocator->getWebRoot();
+-    if ($is_disabled || empty($web_root)) {
++    if (empty($web_root) || in_array('*', $path_patterns)) {
+       return [];
+     }
+ 
+@@ -145,6 +146,12 @@ private function getExcludedPaths(): array {
+       throw new \RuntimeException("Could not scan for files in the project root.");
+     }
+     while ($entry = readdir($handle)) {
++      foreach ($path_patterns as $pattern) {
++        if (fnmatch($pattern, $entry)) {
++          // If the path matches any of the patterns, skip to the next entry.
++          continue 2;
++        }
++      }
+       $files_in_project_root[] = $entry;
+     }
+     closedir($handle);
+diff --git a/core/modules/package_manager/tests/src/Kernel/PathExcluder/UnknownPathExcluderTest.php b/core/modules/package_manager/tests/src/Kernel/PathExcluder/UnknownPathExcluderTest.php
+index e1ccf0f38ad..0b8dd47f163 100644
+--- a/core/modules/package_manager/tests/src/Kernel/PathExcluder/UnknownPathExcluderTest.php
++++ b/core/modules/package_manager/tests/src/Kernel/PathExcluder/UnknownPathExcluderTest.php
+@@ -204,27 +204,38 @@ public function testUnknownPath(bool $use_nested_webroot, ?string $unknown_dir,
+   }
+ 
+   /**
+-   * Tests that the excluder can be disabled by a config flag.
++   * Tests that paths to exclude can be modified by a config option.
+    */
+   public function testExcluderCanBeDisabled(): void {
+     $this->createTestProjectForTemplate(TRUE);
+ 
+     $project_root = $this->container->get(PathLocator::class)
+       ->getProjectRoot();
++    mkdir($project_root . '/known');
++    touch($project_root . '/known/file.txt');
+     mkdir($project_root . '/unknown');
+     touch($project_root . '/unknown/file.txt');
+ 
+     $config = $this->config('package_manager.settings');
+-    $config->set('include_unknown_files_in_project_root', TRUE)->save();
++    $config->set('include_unknown_files_in_project_root', ['*'])->save();
+ 
+     $stage = $this->createStage();
+     $stage->create();
++    $this->assertFileExists($stage->getSandboxDirectory() . '/known/file.txt');
+     $this->assertFileExists($stage->getSandboxDirectory() . '/unknown/file.txt');
+     $stage->destroy();
+ 
+-    $config->set('include_unknown_files_in_project_root', FALSE)->save();
++    $config->set('include_unknown_files_in_project_root', ['known/*.txt'])->save();
+     $this->assertFileExists($project_root . '/unknown/file.txt');
+     $stage->create();
++    $this->assertFileExists($stage->getSandboxDirectory() . '/known/file.txt');
++    $this->assertFileDoesNotExist($stage->getSandboxDirectory() . '/unknown/file.txt');
++
++    $config->set('include_unknown_files_in_project_root', [])->save();
++    $this->assertFileExists($project_root . '/known/file.txt');
++    $this->assertFileExists($project_root . '/unknown/file.txt');
++    $stage->create();
++    $this->assertFileDoesNotExist($stage->getSandboxDirectory() . '/known/file.txt');
+     $this->assertFileDoesNotExist($stage->getSandboxDirectory() . '/unknown/file.txt');
+   }
+ 

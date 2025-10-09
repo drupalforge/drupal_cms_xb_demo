@@ -7,6 +7,11 @@ composer create-project --no-install ${PROJECT:=phenaproxima/xb-demo} --stabilit
 cp -r "${PROJECT#*/}"/* ./
 rm -rf "${PROJECT#*/}" patches.lock.json
 
+# Remove outdated Gin patch.
+composer config -jm extra.patches '{
+  "drupal/gin": []
+}'
+
 # Scaffold settings.php.
 composer config -jm extra.drupal-scaffold.file-mapping '{
     "[web-root]/sites/default/settings.php": {
