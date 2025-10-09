@@ -7,6 +7,11 @@ composer create-project --no-install ${PROJECT:=phenaproxima/xb-demo} --stabilit
 cp -r "${PROJECT#*/}"/* ./
 rm -rf "${PROJECT#*/}" patches.lock.json
 
+# Fix finish_url.
+curl -O https://github.com/darrenoh/xb-demo/commit/6453e45e3f55584cb235560ca93d819dd811bcb3.patch
+patch -p1 < 6453e45e3f55584cb235560ca93d819dd811bcb3.patch
+rm 6453e45e3f55584cb235560ca93d819dd811bcb3.patch
+
 # Remove outdated Gin patch.
 composer config -jm extra.patches '{
   "drupal/gin": []
