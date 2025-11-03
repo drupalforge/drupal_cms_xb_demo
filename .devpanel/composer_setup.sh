@@ -3,9 +3,15 @@ set -eu -o pipefail
 cd $APP_ROOT
 
 # Create required composer.json and composer.lock files.
-composer create-project --no-install ${PROJECT:=phenaproxima/xb-demo} --stability=dev
+composer create-project --no-install ${PROJECT:=drupal/cms} --stability=alpha
 cp -r "${PROJECT#*/}"/* ./
-rm -rf "${PROJECT#*/}" patches.lock.json
+rm -rf "${PROJECT#*/}" patches.lock.json LICENSE.txt
+
+# Set minimum stability to alpha.
+composer config minimum-stability alpha
+
+# Programmatically fix Composer 2.2 allow-plugins to avoid errors
+composer config --no-plugins allow-plugins.cweagans/composer-patches true
 
 # Scaffold settings.php.
 composer config -jm extra.drupal-scaffold.file-mapping '{
@@ -16,12 +22,6 @@ composer config -jm extra.drupal-scaffold.file-mapping '{
 }'
 composer config scripts.post-drupal-scaffold-cmd \
     'cd web/sites/default && test -z "$(grep '\''include \$devpanel_settings;'\'' settings.php)" && patch -Np1 -r /dev/null < $APP_ROOT/.devpanel/drupal-settings.patch || :'
-
-# Compile Storybook.
-composer config -j scripts.post-update-cmd \
-    'command -v nvm > /dev/null || curl -so- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash' \
-    'export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" && cd web/themes/contrib/demo_design_system && nvm install && npm install && npm run build' \
-    'export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" && cd web/themes/contrib/demo_design_system/starshot_demo && nvm install && npm install && npm run build'
 
 # Add repositories for Webform libraries.
 composer config repositories.tippyjs '{
@@ -220,6 +220,7 @@ composer config repositories.codemirror '{
 # Add Webform libraries and Composer Patches.
 composer require -n --no-update \
     codemirror/codemirror \
+    cweagans/composer-patches:^2 \
     jquery/inputmask \
     jquery/intl-tel-input \
     jquery/rateit \

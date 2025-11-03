@@ -27,5 +27,4 @@ web_environment:
     - DB_NAME=db
     - DP_APP_ID=xb_demo
     - DB_DRIVER=mysql
-corepack_enable: false
-ddev_version_constraint: '>=1.24.0'
+corepack_enable: true

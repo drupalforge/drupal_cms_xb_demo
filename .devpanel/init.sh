@@ -67,33 +67,12 @@ fi
 #== Pre-install starter recipe.
 echo
 if [ -z "$(drush status --field=db-status)" ]; then
-  echo 'Install Drupal base system.'
-  while [ -z "$(drush sget recipe_installer_kit.profile_modules_installed 2> /dev/null)" ]; do
-    time .devpanel/install
+  echo 'Install Byte demo.'
+  # For some reason, writable directories are sometimes detected as not
+  # writable, so loop until it works.
+  until time drush -n si ../recipes/byte; do
+    :
   done
-  drush sdel recipe_installer_kit.profile_modules_installed
-
-  echo
-  echo 'Apply required recipes.'
-  RECIPES=$(drush sget --format=yaml recipe_installer_kit.required_recipes | grep '^  - .\+/.\+' | cut -f 4 -d ' ')
-  RECIPES_PATH=$(drush --include=.devpanel/drush crp)
-  RECIPES_APPLIED=''
-  for RECIPE in $RECIPES; do
-    RECIPE_PATH=$RECIPES_PATH/${RECIPE##*/}
-    if [ -d $RECIPE_PATH ]; then
-      until time drush --include=.devpanel/drush -q recipe $RECIPE_PATH; do
-        time drush cr
-      done
-
-      if [ -n "$RECIPES_APPLIED" ]; then
-        RECIPES_APPLIED="$RECIPES_APPLIED,\"$RECIPE\""
-      else
-        RECIPES_APPLIED="\"$RECIPE\""
-      fi
-    fi
-  done
-  drush sdel recipe_installer_kit.required_recipes
-  drush sset --input-format=yaml installer.applied_recipes "[$RECIPES_APPLIED]"
 
   echo
   echo 'Tell Automatic Updates about patches.'
@@ -115,6 +94,7 @@ time drush cron
 echo
 echo 'Populate caches.'
 time drush cache:warm
+time .devpanel/warm
 
 #== Finish measuring script time.
 INIT_DURATION=$SECONDS
