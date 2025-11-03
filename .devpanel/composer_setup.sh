@@ -15,6 +15,7 @@ composer config --no-plugins allow-plugins.cweagans/composer-patches true
 
 # Scaffold settings.php.
 composer config -jm extra.drupal-scaffold.file-mapping '{
+    "[web-root]/robots.txt": false,
     "[web-root]/sites/default/settings.php": {
         "path": "web/core/assets/scaffold/files/default.settings.php",
         "overwrite": false
