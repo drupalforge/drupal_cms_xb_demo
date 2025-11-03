@@ -68,11 +68,7 @@ fi
 echo
 if [ -z "$(drush status --field=db-status)" ]; then
   echo 'Install Byte demo.'
-  # For some reason, writable directories are sometimes detected as not
-  # writable, so loop until it works.
-  until time drush -n si ../recipes/byte; do
-    :
-  done
+  time drush -n si drupal_cms_installer installer_site_template_form.add_ons=byte
 
   echo
   echo 'Tell Automatic Updates about patches.'
