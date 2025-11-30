@@ -8,7 +8,7 @@ cp -r "${PROJECT#*/}"/* ./
 rm -rf "${PROJECT#*/}" patches.lock.json LICENSE.txt
 
 # Set minimum stability to alpha.
-composer config minimum-stability alpha
+composer config --no-plugins minimum-stability dev
 
 # Programmatically fix Composer 2.2 allow-plugins to avoid errors
 composer config --no-plugins allow-plugins.cweagans/composer-patches true
@@ -222,6 +222,7 @@ composer config repositories.codemirror '{
 composer require -n --no-update \
     codemirror/codemirror \
     cweagans/composer-patches:^2 \
+    drupal/byte:1.x-dev \
     jquery/inputmask \
     jquery/intl-tel-input \
     jquery/rateit \
