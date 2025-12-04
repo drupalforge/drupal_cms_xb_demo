@@ -68,7 +68,9 @@ fi
 echo
 if [ -z "$(drush status --field=db-status)" ]; then
   echo 'Install Byte demo.'
-  time drush -n si drupal_cms_installer installer_site_template_form.add_ons=byte
+  until time drush -n si drupal_cms_installer installer_site_template_form.add_ons=byte; do
+    :
+  done
 
   echo
   echo 'Tell Automatic Updates about patches.'
