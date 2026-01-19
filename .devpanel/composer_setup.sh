@@ -227,7 +227,7 @@ composer config repositories.codemirror '{
 # Add Webform libraries and Composer Patches.
 composer require -n --no-update \
     codemirror/codemirror \
-    cweagans/composer-patches:^2 \
+    cweagans/composer-patches \
     jquery/inputmask \
     jquery/intl-tel-input \
     jquery/rateit \
