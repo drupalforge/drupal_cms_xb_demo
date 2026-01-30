@@ -3,12 +3,12 @@ set -eu -o pipefail
 cd $APP_ROOT
 
 # Create required composer.json and composer.lock files.
-composer create-project --no-install ${PROJECT:=drupal/cms} --stability=alpha
+composer create-project --no-install ${PROJECT:=drupal/cms}
 cp -r "${PROJECT#*/}"/* ./
 rm -rf "${PROJECT#*/}" patches.lock.json LICENSE.txt
 
 # Set minimum stability to alpha.
-composer config --no-plugins minimum-stability dev
+composer config --no-plugins minimum-stability alpha
 
 # Programmatically fix Composer 2.2 allow-plugins to avoid errors
 composer config --no-plugins allow-plugins.cweagans/composer-patches true
