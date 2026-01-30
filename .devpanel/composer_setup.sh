@@ -10,15 +10,6 @@ rm -rf "${PROJECT#*/}" patches.lock.json LICENSE.txt
 # Set minimum stability to alpha.
 composer config --no-plugins minimum-stability alpha
 
-# Programmatically fix Composer 2.2 allow-plugins to avoid errors
-composer config --no-plugins allow-plugins.cweagans/composer-patches true
-
-composer config -jm extra.composer-patches '{
-    "ignore-dependency-patches": [
-        "drupal/byte"
-    ]
-}'
-
 # Scaffold settings.php.
 composer config -jm extra.drupal-scaffold.file-mapping '{
     "[web-root]/robots.txt": false,
@@ -227,7 +218,6 @@ composer config repositories.codemirror '{
 # Add Webform libraries and Composer Patches.
 composer require -n --no-update \
     codemirror/codemirror \
-    cweagans/composer-patches \
     jquery/inputmask \
     jquery/intl-tel-input \
     jquery/rateit \
