@@ -3,4 +3,4 @@ command:
     install:
       options:
         account-pass: admin
-        site-name: Drupal CMS 2.0
+        site-name: Drupal CMS 2.1

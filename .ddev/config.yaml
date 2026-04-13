@@ -1,6 +1,6 @@
 type: drupal11
 docroot: web
-php_version: "8.3"
+php_version: "8.5"
 webserver_type: apache-fpm
 xdebug_enabled: false
 additional_hostnames: []
@@ -20,12 +20,13 @@ disable_settings_management: true
 web_environment:
     # Set up DevPanel variables.
     - APP_ROOT=$DDEV_COMPOSER_ROOT
+    - DRUSH_OPTIONS_URI=$DDEV_PRIMARY_URL
     - WEB_ROOT=$DDEV_COMPOSER_ROOT/$DDEV_DOCROOT
     - DB_HOST=db
     - DB_PORT=3306
     - DB_USER=db
     - DB_PASSWORD=db
     - DB_NAME=db
-    - DP_APP_ID=xb_demo
+    - DP_APP_ID=canvas
     - DB_DRIVER=mysql
-corepack_enable: true
+corepack_enable: false

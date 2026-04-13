@@ -4,11 +4,9 @@ cd $APP_ROOT
 
 # Create required composer.json and composer.lock files.
 composer create-project --no-install ${PROJECT:=drupal/cms}
-cp -r "${PROJECT#*/}"/* ./
-rm -rf "${PROJECT#*/}" patches.lock.json LICENSE.txt
-
-# Set minimum stability to alpha.
-composer config --no-plugins minimum-stability alpha
+rm -f ${PROJECT#*/}/LICENSE*
+cp -r ${PROJECT#*/}/* ./
+rm -rf ${PROJECT#*/}
 
 # Scaffold settings.php.
 composer config -jm extra.drupal-scaffold.file-mapping '{
@@ -215,7 +213,7 @@ composer config repositories.codemirror '{
     }
 }'
 
-# Add Webform libraries and Composer Patches.
+# Add Webform libraries.
 composer require -n --no-update \
     codemirror/codemirror \
     jquery/inputmask \
