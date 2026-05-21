@@ -8,6 +8,9 @@ rm -f ${PROJECT#*/}/LICENSE*
 cp -r ${PROJECT#*/}/* ./
 rm -rf ${PROJECT#*/}
 
+# Programmatically fix Composer 2.2 allow-plugins to avoid errors.
+composer config --no-plugins allow-plugins.cweagans/composer-patches true
+
 # Scaffold settings.php.
 composer config -jm extra.drupal-scaffold.file-mapping '{
     "[web-root]/robots.txt": false,
@@ -50,6 +53,22 @@ composer config repositories.tabby '{
             "type": "zip"
         },
         "license": "MIT"
+    }
+}'
+composer config repositories.svg-pan-zoom '{
+    "type": "package",
+    "package": {
+        "name": "svg-pan-zoom/svg-pan-zoom",
+        "version": "3.6.1",
+        "type": "drupal-library",
+        "extra": {
+            "installer-name": "svg-pan-zoom"
+        },
+        "dist": {
+            "url": "https://github.com/ariutta/svg-pan-zoom/archive/refs/tags/3.6.1.zip",
+            "type": "zip"
+        },
+        "license": "BSD-2-Clause"
     }
 }'
 composer config repositories.signature_pad '{
@@ -196,6 +215,22 @@ composer config repositories."jquery.inputmask" '{
         "license": "MIT"
     }
 }'
+composer config repositories."jquery.image-picker" '{
+    "type": "package",
+    "package": {
+        "name": "jquery/image-picker",
+        "version": "0.3.1",
+        "type": "drupal-library",
+        "extra": {
+            "installer-name": "jquery.image-picker"
+        },
+        "dist": {
+            "url": "https://github.com/rvera/image-picker/archive/refs/tags/0.3.1.zip",
+            "type": "zip"
+        },
+        "license": "MIT"
+    }
+}'
 composer config repositories.codemirror '{
     "type": "package",
     "package": {
@@ -213,9 +248,11 @@ composer config repositories.codemirror '{
     }
 }'
 
-# Add Webform libraries.
+# Add Webform libraries and Composer Patches.
 composer require -n --no-update \
     codemirror/codemirror \
+    cweagans/composer-patches \
+    jquery/image-picker \
     jquery/inputmask \
     jquery/intl-tel-input \
     jquery/rateit \
@@ -225,5 +262,6 @@ composer require -n --no-update \
     popperjs/popperjs \
     progress-tracker/progress-tracker \
     signature_pad/signature_pad \
+    svg-pan-zoom/svg-pan-zoom \
     tabby/tabby \
     tippyjs/tippyjs
